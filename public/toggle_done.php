@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Veiligheidscheck: taak moet toebehoren aan gebruiker
+    
     $stmt = $conn->prepare("
         SELECT t.*, l.user_id
         FROM tasks t
@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    // Update status
+    
     $stmt = $conn->prepare("UPDATE tasks SET done = ? WHERE id = ?");
     $stmt->execute([$done, $task_id]);
     echo "Status aangepast";

@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 $list_id = $_GET['id'];
 $user_id = $_SESSION['user_id'];
 
-// Titel ophalen
+
 $stmt = $conn->prepare("SELECT * FROM lists WHERE id = ? AND user_id = ?");
 $stmt->execute([$list_id, $user_id]);
 $list = $stmt->fetch();
@@ -17,7 +17,7 @@ if (!$list) {
     die("Lijst niet gevonden.");
 }
 
-// Taken ophalen gesorteerd op prioriteit (high bovenaan)
+
 $stmt = $conn->prepare("SELECT * FROM tasks WHERE list_id = ? ORDER BY 
   FIELD(priority, 'high', 'medium', 'low'), id DESC");
 $stmt->execute([$list_id]);
