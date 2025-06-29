@@ -10,6 +10,26 @@ $list_id = $_GET['id'];
 $user_id = $_SESSION['user_id'];
 
 
+$sortType = $_GET['type'] ?? 'priority';
+$sortOrder = $_GET['sort'] ?? 'asc';
+
+$allowedTypes = ['title', 'priority'];
+$allowedOrders = ['asc', 'desc'];
+
+if (!in_array($sortType, $allowedTypes)) $sortType = 'priority';
+if (!in_array($sortOrder, $allowedOrders)) $sortOrder = 'asc';
+
+$orderBy = $sortType === 'priority'
+    ? "FIELD(priority, 'high', 'medium', 'low')" . ($sortOrder === 'desc' ? ' DESC' : '')
+    : "$sortType " . strtoupper($sortOrder);
+
+// Nieuwe query
+$stmt = $conn->prepare("SELECT * FROM tasks WHERE list_id = ? ORDER BY $orderBy");
+$stmt->execute([$list_id]);
+$tasks = $stmt->fetchAll();
+
+
+
 $stmt = $conn->prepare("SELECT * FROM lists WHERE id = ? AND user_id = ?");
 $stmt->execute([$list_id, $user_id]);
 $list = $stmt->fetch();
@@ -18,10 +38,7 @@ if (!$list) {
 }
 
 
-$stmt = $conn->prepare("SELECT * FROM tasks WHERE list_id = ? ORDER BY 
-  FIELD(priority, 'high', 'medium', 'low'), id DESC");
-$stmt->execute([$list_id]);
-$tasks = $stmt->fetchAll();
+
 ?>
 
 <h2><?= htmlspecialchars($list['title']) ?></h2>
@@ -34,6 +51,13 @@ $tasks = $stmt->fetchAll();
         <option value="medium">Medium</option>
         <option value="high">High</option>
     </select>
+    <p>Sorteren op:
+        <a href="?id=<?= $list_id ?>&type=title&sort=asc">Titel ↑</a> |
+        <a href="?id=<?= $list_id ?>&type=title&sort=desc">Titel ↓</a> |
+        <a href="?id=<?= $list_id ?>&type=priority&sort=asc">Prioriteit ↑</a> |
+        <a href="?id=<?= $list_id ?>&type=priority&sort=desc">Prioriteit ↓</a>
+    </p>
+
     <button type="submit">Toevoegen</button>
 </form>
 

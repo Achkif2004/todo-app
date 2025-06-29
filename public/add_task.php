@@ -24,6 +24,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception("Lijst niet gevonden.");
         }
 
+        // Dubbele taak controleren
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM tasks WHERE list_id = ? AND title = ?");
+        $stmt->execute([$list_id, $title]);
+        $exists = $stmt->fetchColumn();
+
+        if ($exists > 0) {
+            throw new Exception("Deze taak bestaat al in deze lijst.");
+        }
+
+
         $stmt = $conn->prepare("INSERT INTO tasks (list_id, title, priority) VALUES (?, ?, ?)");
         $stmt->execute([$list_id, $title, $priority]);
 
