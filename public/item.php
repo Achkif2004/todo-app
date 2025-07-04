@@ -9,7 +9,6 @@ if (!$task_id || !$user_id) {
     die("Geen toegang");
 }
 
-// Haal taak op met bijbehorende lijst en check ownership
 $stmt = $conn->prepare("
     SELECT t.*, l.user_id 
     FROM tasks t 
@@ -21,20 +20,28 @@ $task = $stmt->fetch();
 
 if (!$task) die("Taak niet gevonden of geen toegang");
 
-// Commentaren ophalen
 $stmt = $conn->prepare("SELECT * FROM comments WHERE task_id = ? ORDER BY created_at DESC");
 $stmt->execute([$task_id]);
 $comments = $stmt->fetchAll();
 
-// Bestanden ophalen
 $stmt = $conn->prepare("SELECT * FROM files WHERE task_id = ?");
 $stmt->execute([$task_id]);
 $files = $stmt->fetchAll();
 ?>
 
+<?php
+if (isset($_SESSION['message'])) {
+    echo "<p style='color:green'>" . $_SESSION['message'] . "</p>";
+    unset($_SESSION['message']);
+}
+if (isset($_SESSION['error'])) {
+    echo "<p style='color:red'>" . $_SESSION['error'] . "</p>";
+    unset($_SESSION['error']);
+}
+?>
+
 <h2><?= htmlspecialchars($task['title']) ?> (<?= $task['priority'] ?>)</h2>
 
-<!-- Commentformulier -->
 <form action="add_comment.php" method="post">
     <input type="hidden" name="task_id" value="<?= $task_id ?>">
     <textarea name="content" required placeholder="Typ je commentaar..."></textarea>
@@ -47,7 +54,6 @@ $files = $stmt->fetchAll();
 <?php endforeach; ?>
 </ul>
 
-<!-- Bestand upload -->
 <form action="upload_file.php" method="post" enctype="multipart/form-data">
     <input type="hidden" name="task_id" value="<?= $task_id ?>">
     <input type="file" name="file" required>

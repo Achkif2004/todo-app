@@ -17,30 +17,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception("Titel mag niet leeg zijn.");
         }
 
-        // Check of lijst van gebruiker is
         $stmt = $conn->prepare("SELECT * FROM lists WHERE id = ? AND user_id = ?");
         $stmt->execute([$list_id, $user_id]);
         if (!$stmt->fetch()) {
             throw new Exception("Lijst niet gevonden.");
         }
 
-        // Dubbele taak controleren
         $stmt = $conn->prepare("SELECT COUNT(*) FROM tasks WHERE list_id = ? AND title = ?");
         $stmt->execute([$list_id, $title]);
-        $exists = $stmt->fetchColumn();
-
-        if ($exists > 0) {
+        if ($stmt->fetchColumn() > 0) {
             throw new Exception("Deze taak bestaat al in deze lijst.");
         }
-
 
         $stmt = $conn->prepare("INSERT INTO tasks (list_id, title, priority) VALUES (?, ?, ?)");
         $stmt->execute([$list_id, $title, $priority]);
 
+        $_SESSION['message'] = "Taak toegevoegd!";
         header("Location: list.php?id=" . $list_id);
         exit;
     } catch (Exception $e) {
-        echo "Fout: " . $e->getMessage();
+        $_SESSION['error'] = $e->getMessage();
+        header("Location: list.php?id=" . $list_id);
+        exit;
     }
 }
-?>

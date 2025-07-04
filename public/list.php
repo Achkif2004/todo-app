@@ -1,4 +1,5 @@
 <?php
+
 session_start();
 require_once '../includes/db.php';
 if (!isset($_SESSION['user_id'])) {
@@ -23,7 +24,7 @@ $orderBy = $sortType === 'priority'
     ? "FIELD(priority, 'high', 'medium', 'low')" . ($sortOrder === 'desc' ? ' DESC' : '')
     : "$sortType " . strtoupper($sortOrder);
 
-// Nieuwe query
+
 $stmt = $conn->prepare("SELECT * FROM tasks WHERE list_id = ? ORDER BY $orderBy");
 $stmt->execute([$list_id]);
 $tasks = $stmt->fetchAll();

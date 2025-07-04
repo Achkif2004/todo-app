@@ -1,18 +1,18 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit;
-}
-?>
-
-
-<?php
-session_start();
 require_once '../includes/db.php';
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
+}
+
+if (isset($_SESSION['message'])) {
+    echo "<p style='color:green'>" . $_SESSION['message'] . "</p>";
+    unset($_SESSION['message']);
+}
+if (isset($_SESSION['error'])) {
+    echo "<p style='color:red'>" . $_SESSION['error'] . "</p>";
+    unset($_SESSION['error']);
 }
 
 $user_id = $_SESSION['user_id'];

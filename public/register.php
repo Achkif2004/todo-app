@@ -18,14 +18,16 @@ if (isset($_POST['register'])) {
         $stmt->execute([$username, $email, $hash]);
 
         $_SESSION['user_id'] = $conn->lastInsertId();
+        $_SESSION['message'] = "Registratie gelukt!";
         header("Location: dashboard.php");
         exit;
     } catch (Exception $e) {
-        echo "Fout: " . $e->getMessage();
+        $_SESSION['error'] = $e->getMessage();
+        header("Location: register.php");
+        exit;
     }
 }
 ?>
-
 
 <form action="register.php" method="post">
     <input type="text" name="username" placeholder="Gebruikersnaam" required>

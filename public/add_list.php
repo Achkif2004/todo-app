@@ -8,9 +8,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $title = $_POST['title'];
         $list = new TodoList($title, $_SESSION['user_id']);
         $list->save($conn);
+        $_SESSION['message'] = "Lijst toegevoegd!";
         header("Location: dashboard.php");
+        exit;
     } catch (Exception $e) {
-        echo "Fout: " . $e->getMessage();
+        $_SESSION['error'] = $e->getMessage();
+        header("Location: dashboard.php");
+        exit;
     }
 }
-?>

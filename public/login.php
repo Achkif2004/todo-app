@@ -16,14 +16,16 @@ if (isset($_POST['login'])) {
         }
 
         $_SESSION['user_id'] = $user['id'];
+        $_SESSION['message'] = "Welkom terug!";
         header("Location: dashboard.php");
         exit;
     } catch (Exception $e) {
-        echo "Fout: " . $e->getMessage();
+        $_SESSION['error'] = $e->getMessage();
+        header("Location: login.php");
+        exit;
     }
 }
 ?>
-
 
 <form action="login.php" method="post">
     <input type="email" name="email" placeholder="E-mail" required>
