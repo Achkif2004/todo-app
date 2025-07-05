@@ -43,6 +43,10 @@ if (!$list) {
 ?>
 
 <h2><?= htmlspecialchars($list['title']) ?></h2>
+<?php if (isset($_GET['success']) && $_GET['success'] == 'task'): ?>
+    <p style="color: green;">Taak toegevoegd!</p>
+<?php endif; ?>
+
 
 <form action="add_task.php" method="post">
     <input type="hidden" name="list_id" value="<?= $list_id ?>">

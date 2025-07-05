@@ -16,6 +16,9 @@ if (isset($_POST['register'])) {
 
         $stmt = $conn->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
         $stmt->execute([$username, $email, $hash]);
+        if ($stmt->fetchColumn() > 0) {
+            throw new Exception("Gebruiker met deze e-mail of gebruikersnaam bestaat al.");
+        }
 
         $_SESSION['user_id'] = $conn->lastInsertId();
         $_SESSION['message'] = "Registratie gelukt!";

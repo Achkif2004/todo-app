@@ -33,11 +33,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$list_id, $title, $priority]);
 
         $_SESSION['message'] = "Taak toegevoegd!";
-        header("Location: list.php?id=" . $list_id);
+        header("Location: list.php?id=" . $list_id . "&success=task");
         exit;
     } catch (Exception $e) {
         $_SESSION['error'] = $e->getMessage();
-        header("Location: list.php?id=" . $list_id);
+        header("Location: list.php?id=" . $list_id . "&success=task");
         exit;
     }
 }
