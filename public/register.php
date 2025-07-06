@@ -12,13 +12,17 @@ if (isset($_POST['register'])) {
             throw new Exception("Vul alle velden in.");
         }
 
+        // Check of email of username al bestaat
+        $stmt = $conn->prepare("SELECT COUNT(*) FROM users WHERE email = ? OR username = ?");
+        $stmt->execute([$email, $username]);
+        if ($stmt->fetchColumn() > 0) {
+            throw new Exception("Gebruiker met deze e-mail of gebruikersnaam bestaat al.");
+        }
+
         $hash = password_hash($password, PASSWORD_BCRYPT);
 
         $stmt = $conn->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
         $stmt->execute([$username, $email, $hash]);
-        if ($stmt->fetchColumn() > 0) {
-            throw new Exception("Gebruiker met deze e-mail of gebruikersnaam bestaat al.");
-        }
 
         $_SESSION['user_id'] = $conn->lastInsertId();
         $_SESSION['message'] = "Registratie gelukt!";
@@ -31,6 +35,10 @@ if (isset($_POST['register'])) {
     }
 }
 ?>
+
+<?php if (isset($_SESSION['error'])): ?>
+    <p style="color:red;"><?= $_SESSION['error']; unset($_SESSION['error']); ?></p>
+<?php endif; ?>
 
 <form action="register.php" method="post">
     <input type="text" name="username" placeholder="Gebruikersnaam" required>
