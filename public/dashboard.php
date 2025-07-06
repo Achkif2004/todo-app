@@ -36,3 +36,6 @@ $lists = $stmt->fetchAll();
         </li>
     <?php endforeach; ?>
 </ul>
+
+<a href="logout.php">Uitloggen</a>
+

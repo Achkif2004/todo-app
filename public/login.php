@@ -32,3 +32,6 @@ if (isset($_POST['login'])) {
     <input type="password" name="password" placeholder="Wachtwoord" required>
     <button type="submit" name="login">Login</button>
 </form>
+
+<p>Geen account? <a href="register.php">Registreer je hier</a>.</p>
+

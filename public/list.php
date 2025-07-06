@@ -1,5 +1,4 @@
 <?php
-
 session_start();
 require_once '../includes/db.php';
 if (!isset($_SESSION['user_id'])) {
@@ -9,7 +8,6 @@ if (!isset($_SESSION['user_id'])) {
 
 $list_id = $_GET['id'];
 $user_id = $_SESSION['user_id'];
-
 
 $sortType = $_GET['type'] ?? 'priority';
 $sortOrder = $_GET['sort'] ?? 'asc';
@@ -24,12 +22,9 @@ $orderBy = $sortType === 'priority'
     ? "FIELD(priority, 'high', 'medium', 'low')" . ($sortOrder === 'desc' ? ' DESC' : '')
     : "$sortType " . strtoupper($sortOrder);
 
-
 $stmt = $conn->prepare("SELECT * FROM tasks WHERE list_id = ? ORDER BY $orderBy");
 $stmt->execute([$list_id]);
 $tasks = $stmt->fetchAll();
-
-
 
 $stmt = $conn->prepare("SELECT * FROM lists WHERE id = ? AND user_id = ?");
 $stmt->execute([$list_id, $user_id]);
@@ -37,16 +32,12 @@ $list = $stmt->fetch();
 if (!$list) {
     die("Lijst niet gevonden.");
 }
-
-
-
 ?>
 
 <h2><?= htmlspecialchars($list['title']) ?></h2>
 <?php if (isset($_GET['success']) && $_GET['success'] == 'task'): ?>
     <p style="color: green;">Taak toegevoegd!</p>
 <?php endif; ?>
-
 
 <form action="add_task.php" method="post">
     <input type="hidden" name="list_id" value="<?= $list_id ?>">
@@ -62,7 +53,6 @@ if (!$list) {
         <a href="?id=<?= $list_id ?>&type=priority&sort=asc">Prioriteit ↑</a> |
         <a href="?id=<?= $list_id ?>&type=priority&sort=desc">Prioriteit ↓</a>
     </p>
-
     <button type="submit">Toevoegen</button>
 </form>
 
@@ -70,17 +60,15 @@ if (!$list) {
 <?php foreach ($tasks as $task): ?>
     <li>
         <input type="checkbox" class="done-toggle"
-                data-id="<?= $task['id'] ?>"
-                <?= $task['done'] ? 'checked' : '' ?>>
+               data-id="<?= $task['id'] ?>"
+               <?= $task['done'] ? 'checked' : '' ?>>
         <?= htmlspecialchars($task['title']) ?> (<?= $task['priority'] ?>)
         <a href="item.php?id=<?= $task['id'] ?>">Details</a>
     </li>
-
 <?php endforeach; ?>
 </ul>
 
 <a href="dashboard.php">← Terug</a>
-
 
 <script>
 document.querySelectorAll('.done-toggle').forEach(box => {
@@ -97,5 +85,19 @@ document.querySelectorAll('.done-toggle').forEach(box => {
         .catch(err => alert('Fout bij updaten taak'));
     });
 });
-</script>
 
+
+// Reload pagina als gebruiker via back-button terugkomt
+window.addEventListener("pageshow", function (event) {
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
+
+// Verberg de ?success=task in URL zonder backstack
+if (window.location.search.includes('success=task')) {
+    const url = new URL(window.location);
+    url.searchParams.delete('success');
+    window.history.replaceState({}, document.title, url.pathname + url.search);
+}
+</script>
