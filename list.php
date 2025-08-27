@@ -1,8 +1,135 @@
+```html
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+h2 {
+    text-align: center;
+    margin: 30px auto 20px;
+    color: #222;
+}
+p {
+    text-align: center;
+    font-weight: bold;
+}
+form {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    max-width: 700px;
+    margin: 20px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+}
+input[type="text"] {
+    padding: 10px;
+    border: 1px solid #bbb;
+    border-radius: 6px;
+    width: 220px;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+}
+input[type="text"]:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52,152,219,.15);
+}
+select {
+    padding: 10px;
+    border: 1px solid #bbb;
+    border-radius: 6px;
+    background: #fafafa;
+}
+button {
+    background: #3498db;
+    border: none;
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background .2s, transform .05s;
+}
+button:hover { background: #2980b9; }
+button:active { transform: translateY(1px); }
+form p {
+    width: 100%;
+    text-align: center;
+    margin: 10px 0;
+    font-weight: normal;
+}
+form p a {
+    color: #3498db;
+    text-decoration: none;
+    margin: 0 5px;
+    font-weight: 600;
+}
+form p a:hover {
+    text-decoration: underline;
+}
+ul {
+    list-style: none;
+    padding: 0;
+    max-width: 700px;
+    margin: 20px auto;
+}
+li {
+    background: #fff;
+    margin: 8px 0;
+    padding: 12px 15px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,.08);
+}
+li input[type="checkbox"] {
+    margin-right: 12px;
+    transform: scale(1.2);
+}
+li a {
+    text-decoration: none;
+    color: #3498db;
+    font-weight: 600;
+    margin-left: auto;
+    transition: opacity .2s;
+}
+li a:hover { opacity: .8; }
+a[href="dashboard.php"] {
+    display: block;
+    text-align: center;
+    margin: 30px auto;
+    width: 140px;
+    background: #7f8c8d;
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 700;
+    transition: background .2s, transform .05s;
+}
+a[href="dashboard.php"]:hover { background: #636e72; }
+a[href="dashboard.php"]:active { transform: translateY(1px); }
+@media (max-width: 600px) {
+    form { flex-direction: column; width: 90%; }
+    input[type="text"], select { width: 100%; }
+    ul { max-width: 90%; }
+}
+</style>
+```
+
 <?php
 session_start();
-require_once '../includes/db.php';
+require_once __DIR__ . '/includes/db.php';
+
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
+    header("Location: index.php");
     exit;
 }
 

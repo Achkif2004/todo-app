@@ -1,6 +1,7 @@
 <?php
 session_start();
-require_once '../includes/db.php';
+require_once __DIR__ . '/includes/db.php';
+
 
 $task_id = $_POST['task_id'];
 $user_id = $_SESSION['user_id'] ?? null;
@@ -21,7 +22,27 @@ if (!$task) {
 }
 
 $filename = basename($_FILES['file']['name']);
-$target = "../uploads/" . $filename;
+
+// Optioneel: bestandnaam opschonen (veilig)
+$filename = preg_replace('/[^\w\-. ]+/', '_', $filename);
+
+$uploadsDir = __DIR__ . '/uploads/';
+if (!is_dir($uploadsDir)) {
+    mkdir($uploadsDir, 0775, true);
+}
+
+$target = $uploadsDir . $filename;
+
+// Optioneel: naamconflict opvangen
+if (file_exists($target)) {
+    $pathinfo = pathinfo($filename);
+    $base = $pathinfo['filename'];
+    $ext  = isset($pathinfo['extension']) ? '.' . $pathinfo['extension'] : '';
+    $i = 2;
+    while (file_exists($uploadsDir . $base . " ($i)" . $ext)) $i++;
+    $filename = $base . " ($i)" . $ext;
+    $target   = $uploadsDir . $filename;
+}
 
 if (move_uploaded_file($_FILES['file']['tmp_name'], $target)) {
     $stmt = $conn->prepare("INSERT INTO files (task_id, filename) VALUES (?, ?)");
