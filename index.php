@@ -1,54 +1,31 @@
 <?php
-session_start();
-require_once __DIR__ . '/includes/db.php';
 
-// Database verbinding controleren
-try {
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $conn->query('SELECT 1'); // Test query om verbinding te verifiëren
-} catch(PDOException $e) {
-    error_log("Database fout: " . $e->getMessage());
-    $_SESSION['error'] = "Er is een technisch probleem opgetreden.";
-    header("Location: index.php");
-    exit;
-}
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+
+session_start();
+require_once(__DIR__ . '/includes/db.php');
+
 
 if (isset($_POST['login'])) {
     try {
-        $email = trim($_POST['email']);
+        $email = $_POST['email'];
         $password = $_POST['password'];
 
-        // Email validatie
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            throw new Exception("Ongeldig e-mailadres.");
-        }
-
-        // Query uitvoeren met logging
         $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
         $stmt->execute([$email]);
-        
-        // Logging voor debugging
-        error_log("Login poging voor email: " . $email);
-        error_log("Query uitgevoerd, rijen gevonden: " . ($stmt->rowCount() > 0 ? 'ja' : 'nee'));
-
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$user) {
-            throw new Exception("Gebruiker niet gevonden.");
+        if (!$user || !password_verify($password, $user['password'])) {
+            throw new Exception("Login mislukt: foutieve gegevens.");
         }
 
-        if (!password_verify($password, $user['password'])) {
-            throw new Exception("Ongeldig wachtwoord.");
-        }
-
-        // Succesvolle login
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['message'] = "Welkom terug!";
         header("Location: dashboard.php");
         exit;
-
     } catch (Exception $e) {
-        error_log("Login fout: " . $e->getMessage());
         $_SESSION['error'] = $e->getMessage();
         header("Location: index.php");
         exit;
@@ -121,6 +98,45 @@ if (isset($_POST['login'])) {
         a:hover {
             text-decoration: underline;
         }
+
+          @media (max-width: 1200px) {
+            html { font-size: 22px; }
+            body {
+                margin-top: 0;
+                min-height: 100svh;
+                justify-content: center;
+                padding: 28px;
+            }
+            h2 {
+                font-size: 2.6rem;
+                margin: 0 0 24px 0;
+                text-align: center;
+            }
+            form {
+                width: 100%;
+                max-width: 760px;
+                padding: 40px;
+                border-radius: 18px;
+                box-shadow: 0 10px 32px rgba(0,0,0,0.14);
+            }
+            input, button {
+                font-size: 1.375rem;
+                padding: 20px;
+                border-radius: 12px;
+            }
+            button {
+                min-height: 68px;
+                letter-spacing: .4px;
+            }
+            p, a { font-size: 1.125rem; }
+        }
+
+        @media (max-width: 380px) {
+            html { font-size: 24px; }
+            form { padding: 44px; border-radius: 20px; }
+            input, button { padding: 22px; border-radius: 14px; }
+            h2 { font-size: 2.8rem; }
+        }
     </style>
 </head>
 <body>
@@ -141,3 +157,4 @@ if (isset($_POST['login'])) {
 
 </body>
 </html>
+

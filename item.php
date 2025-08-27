@@ -1,8 +1,11 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 session_start();
 require_once __DIR__ . '/includes/db.php';
 
-// --- Veilig id ophalen ---
+// --- Veilig id + sessie check ---
 $task_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $user_id = $_SESSION['user_id'] ?? null;
 
@@ -18,20 +21,25 @@ $stmt = $conn->prepare("
     WHERE t.id = ? AND l.user_id = ?
 ");
 $stmt->execute([$task_id, $user_id]);
-$task = $stmt->fetch();
+$task = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$task) {
     die("Taak niet gevonden of geen toegang");
 }
 
 // --- Comments & files ophalen ---
-$stmt = $conn->prepare("SELECT * FROM comments WHERE task_id = ? ORDER BY created_at DESC");
+$stmt = $conn->prepare("SELECT id, content, created_at FROM comments WHERE task_id = ? ORDER BY created_at DESC");
 $stmt->execute([$task_id]);
-$comments = $stmt->fetchAll();
+$comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$stmt = $conn->prepare("SELECT * FROM files WHERE task_id = ?");
+$stmt = $conn->prepare("SELECT id, filename FROM files WHERE task_id = ?");
 $stmt->execute([$task_id]);
-$files = $stmt->fetchAll();
+$files = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Flash messages
+$flash_ok  = $_SESSION['message'] ?? null;
+$flash_err = $_SESSION['error'] ?? null;
+unset($_SESSION['message'], $_SESSION['error']);
 ?>
 <!DOCTYPE html>
 <html lang="nl">
@@ -51,10 +59,7 @@ h2 {
     margin: 30px auto 20px;
     color: #222;
 }
-p {
-    text-align: center;
-    font-weight: bold;
-}
+p { text-align: center; font-weight: bold; }
 form {
     display: flex;
     flex-direction: column;
@@ -124,9 +129,7 @@ li a {
     color: #3498db;
     font-weight: 600;
 }
-li a:hover {
-    text-decoration: underline;
-}
+li a:hover { text-decoration: underline; }
 a[href^="list.php"] {
     display: block;
     text-align: center;
@@ -142,86 +145,125 @@ a[href^="list.php"] {
 }
 a[href^="list.php"]:hover { background: #636e72; }
 a[href^="list.php"]:active { transform: translateY(1px); }
-@media (max-width: 560px) {
-    form { width: 90%; }
-    ul { max-width: 90%; }
+@media (max-width: 1200px) {
+    html { font-size: 26px; }
+    body {
+        min-height: 100svh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 28px;
+        gap: 18px;
+    }
+    h2 {
+        font-size: 2.8rem;
+        margin: 0;
+        text-align: center;
+    }
+    form {
+        width: 100%;
+        max-width: 820px;
+        padding: 44px;
+        border-radius: 22px;
+        box-shadow: 0 12px 36px rgba(0,0,0,.14);
+        gap: 16px;
+    }
+    textarea {
+        font-size: 1.5rem;
+        padding: 22px;
+        border-radius: 14px;
+        min-height: 140px;
+    }
+    input[type="file"] {
+        font-size: 1.2rem;
+        padding: 16px;
+        border-radius: 14px;
+    }
+    button {
+        font-size: 1.5rem;
+        padding: 22px;
+        border-radius: 14px;
+        min-height: 72px;
+        letter-spacing: .4px;
+    }
+    ul {
+        width: 100%;
+        max-width: 820px;
+        margin: 0;
+    }
+    li {
+        padding: 22px 24px;
+        border-radius: 18px;
+        font-size: 1.15rem;
+    }
+    li em {
+        font-size: .9rem;
+        margin-top: 8px;
+    }
+    a[href^="list.php"] {
+        width: 100%;
+        max-width: 420px;
+        font-size: 1.3rem;
+        padding: 20px 22px;
+        border-radius: 14px;
+        box-shadow: 0 8px 26px rgba(127,140,141,.25);
+    }
+    p { font-size: 1.2rem; }
+}
+
+@media (max-width: 1200px) {
+    html { font-size: 28px; }
+    form { padding: 48px; border-radius: 24px; }
+    textarea, input[type="file"], button { padding: 24px; border-radius: 16px; }
+    h2 { font-size: 3rem; }
 }
 </style>
 </head>
 <body>
 
-<?php
-session_start();
-require_once __DIR__ . '/includes/db.php';
+<?php if ($flash_ok): ?>
+  <p style="color:green"><?= htmlspecialchars($flash_ok) ?></p>
+<?php endif; ?>
+<?php if ($flash_err): ?>
+  <p style="color:red"><?= htmlspecialchars($flash_err) ?></p>
+<?php endif; ?>
 
-
-$task_id = $_GET['id'] ?? null;
-$user_id = $_SESSION['user_id'] ?? null;
-
-if (!$task_id || !$user_id) {
-    die("Geen toegang");
-}
-
-$stmt = $conn->prepare("
-    SELECT t.*, l.user_id 
-    FROM tasks t 
-    JOIN lists l ON t.list_id = l.id 
-    WHERE t.id = ? AND l.user_id = ?
-");
-$stmt->execute([$task_id, $user_id]);
-$task = $stmt->fetch();
-
-if (!$task) die("Taak niet gevonden of geen toegang");
-
-$stmt = $conn->prepare("SELECT * FROM comments WHERE task_id = ? ORDER BY created_at DESC");
-$stmt->execute([$task_id]);
-$comments = $stmt->fetchAll();
-
-$stmt = $conn->prepare("SELECT * FROM files WHERE task_id = ?");
-$stmt->execute([$task_id]);
-$files = $stmt->fetchAll();
-?>
-
-<?php
-if (isset($_SESSION['message'])) {
-    echo "<p style='color:green'>" . $_SESSION['message'] . "</p>";
-    unset($_SESSION['message']);
-}
-if (isset($_SESSION['error'])) {
-    echo "<p style='color:red'>" . $_SESSION['error'] . "</p>";
-    unset($_SESSION['error']);
-}
-?>
-
-<h2><?= htmlspecialchars($task['title']) ?> (<?= $task['priority'] ?>)</h2>
+<h2><?= htmlspecialchars($task['title']) ?> (<?= htmlspecialchars($task['priority']) ?>)</h2>
 
 <form action="add_comment.php" method="post">
-    <input type="hidden" name="task_id" value="<?= $task_id ?>">
+    <input type="hidden" name="task_id" value="<?= (int)$task_id ?>">
     <textarea name="content" required placeholder="Typ je commentaar..."></textarea>
     <button type="submit">Voeg commentaar toe</button>
 </form>
 
 <ul>
 <?php foreach ($comments as $c): ?>
-    <li><?= htmlspecialchars($c['content']) ?> <em><?= $c['created_at'] ?></em></li>
+  <li>
+    <?= htmlspecialchars($c['content']) ?>
+    <em><?= htmlspecialchars($c['created_at']) ?></em>
+  </li>
 <?php endforeach; ?>
 </ul>
 
 <form action="upload_file.php" method="post" enctype="multipart/form-data">
-    <input type="hidden" name="task_id" value="<?= $task_id ?>">
+    <input type="hidden" name="task_id" value="<?= (int)$task_id ?>">
     <input type="file" name="file" required>
     <button type="submit">Upload bestand</button>
 </form>
 
 <ul>
 <?php foreach ($files as $f): ?>
-    <li><a href="uploads/<?= rawurlencode($f['filename']) ?>" target="_blank">
-    <?= htmlspecialchars($f['filename']) ?>
-</a></li>
-
+  <li>
+    <!-- Als /www/uploads/ bestaat, geen .. gebruiken -->
+    <a href="uploads/<?= rawurlencode(basename($f['filename'])) ?>" target="_blank">
+      <?= htmlspecialchars($f['filename']) ?>
+    </a>
+  </li>
 <?php endforeach; ?>
 </ul>
 
-<a href="list.php?id=<?= $task['list_id'] ?>">← Terug naar lijst</a>
+<a href="list.php?id=<?= (int)$task['list_id'] ?>">← Terug naar lijst</a>
+
 </body>
 </html>
