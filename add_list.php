@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . '/includes/db.php';
-require_once __DIR__ . '/../classes/List.php';
+require_once __DIR__ . '/classes/List.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
