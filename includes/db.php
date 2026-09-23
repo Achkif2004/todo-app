@@ -1,8 +1,8 @@
 <?php
-$host = 'ID474795_planyourtrip.db.webhosting.be';
-$db = 'ID474795_planyourtrip'; 
-$user = 'ID474795_planyourtrip';
-$pass = 'T22OH6n6x145x806s3uw'; 
+$host = 'JOUW_DB_HOST';
+$db = 'JOUW_DB_NAAM';
+$user = 'JOUW_DB_GEBRUIKER';
+$pass = 'JOUW_DB_WACHTWOORD'; // echte gegevens nooit naar GitHub pushen
 
 try {
     $conn = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass);
