@@ -45,231 +45,86 @@ if (!$list) {
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="UTF-8">
-<title><?= htmlspecialchars($list['title']) ?></title>
-<style>
-body {
-    font-family: Arial, sans-serif;
-    background: #f4f6f9;
-    margin: 0;
-    padding: 0;
-    color: #333;
-}
-h2 {
-    text-align: center;
-    margin: 30px auto 20px;
-    color: #222;
-}
-p { text-align: center; font-weight: bold; }
-form {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
-    max-width: 700px;
-    margin: 20px auto;
-    background: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,.08);
-}
-input[type="text"] {
-    padding: 10px;
-    border: 1px solid #bbb;
-    border-radius: 6px;
-    width: 220px;
-    outline: none;
-    transition: border-color .2s, box-shadow .2s;
-}
-input[type="text"]:focus {
-    border-color: #3498db;
-    box-shadow: 0 0 0 3px rgba(52,152,219,.15);
-}
-select {
-    padding: 10px;
-    border: 1px solid #bbb;
-    border-radius: 6px;
-    background: #fafafa;
-}
-button {
-    background: #3498db;
-    border: none;
-    color: #fff;
-    padding: 10px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background .2s, transform .05s;
-}
-button:hover { background: #2980b9; }
-button:active { transform: translateY(1px); }
-form p {
-    width: 100%;
-    text-align: center;
-    margin: 10px 0;
-    font-weight: normal;
-}
-form p a {
-    color: #3498db;
-    text-decoration: none;
-    margin: 0 5px;
-    font-weight: 600;
-}
-form p a:hover { text-decoration: underline; }
-ul {
-    list-style: none;
-    padding: 0;
-    max-width: 700px;
-    margin: 20px auto;
-}
-li {
-    background: #fff;
-    margin: 8px 0;
-    padding: 12px 15px;
-    border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,.08);
-}
-li input[type="checkbox"] {
-    margin-right: 12px;
-    transform: scale(1.2);
-}
-li a {
-    text-decoration: none;
-    color: #3498db;
-    font-weight: 600;
-    margin-left: auto;
-    transition: opacity .2s;
-}
-li a:hover { opacity: .8; }
-a[href="dashboard.php"] {
-    display: block;
-    text-align: center;
-    margin: 30px auto;
-    width: 140px;
-    background: #7f8c8d;
-    color: #fff;
-    padding: 10px 14px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 700;
-    transition: background .2s, transform .05s;
-}
-a[href="dashboard.php"]:hover { background: #636e72; }
-a[href="dashboard.php"]:active { transform: translateY(1px); }
-@media (max-width: 1200px) {
-    html { font-size: 26px; }
-    body {
-        min-height: 100svh;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        padding: 28px;
-        gap: 18px;
-    }
-    h2 {
-        font-size: 2.8rem;
-        margin: 0;
-        text-align: center;
-    }
-    form {
-        width: 100%;
-        max-width: 820px;
-        gap: 16px;
-        margin: 0;
-        flex-direction: column;
-        align-items: stretch;
-        background: #fff;
-        padding: 44px;
-        border-radius: 22px;
-        box-shadow: 0 12px 36px rgba(0,0,0,.14);
-    }
-    input[type="text"], select {
-        width: 100%;
-        font-size: 1.5rem;
-        padding: 22px;
-        border-radius: 14px;
-    }
-    button {
-        font-size: 1.5rem;
-        padding: 22px;
-        border-radius: 14px;
-        min-height: 72px;
-        letter-spacing: .4px;
-    }
-    form p, form p a { font-size: 1.2rem; }
-    ul {
-        width: 100%;
-        max-width: 820px;
-        margin: 0;
-    }
-    li {
-        padding: 22px 24px;
-        border-radius: 18px;
-        font-size: 1.2rem;
-    }
-    li input[type="checkbox"] {
-        transform: scale(1.6);
-        margin-right: 16px;
-    }
-    a[href="dashboard.php"] {
-        width: 100%;
-        max-width: 420px;
-        font-size: 1.3rem;
-        padding: 20px 22px;
-        border-radius: 14px;
-        box-shadow: 0 8px 26px rgba(127,140,141,.25);
-    }
-}
-@media (max-width: 380px) {
-    html { font-size: 28px; }
-    form { padding: 48px; border-radius: 24px; }
-    input[type="text"], select, button { padding: 24px; border-radius: 16px; }
-    h2 { font-size: 3rem; }
-}
-</style>
+<?php $pageTitle = $list['title']; require __DIR__ . '/includes/head.php'; ?>
 </head>
 <body>
+<?php
+// Weergave-hulpjes (enkel voor de opmaak)
+$prioLabels = ['low' => 'Laag', 'medium' => 'Gemiddeld', 'high' => 'Hoog'];
+$sortOptions = [
+    ['priority', 'asc',  'Hoogste prioriteit'],
+    ['priority', 'desc', 'Laagste prioriteit'],
+    ['title',    'asc',  'Titel A–Z'],
+    ['title',    'desc', 'Titel Z–A'],
+];
+?>
 
-<h2><?= htmlspecialchars($list['title']) ?></h2>
+<?php require __DIR__ . '/includes/nav.php'; ?>
 
-<?php if (isset($_GET['success']) && $_GET['success'] === 'task'): ?>
-    <p style="color: green;">Taak toegevoegd!</p>
-<?php endif; ?>
+<main class="page">
+  <div class="container container-narrow">
 
-<form action="add_task.php" method="post">
-    <input type="hidden" name="list_id" value="<?= (int)$list_id ?>">
-    <input type="text" name="title" placeholder="Nieuwe taak" required>
-    <select name="priority">
-        <option value="low">Low</option>
-        <option value="medium">Medium</option>
-        <option value="high">High</option>
-    </select>
-    <p>Sorteren op:
-        <a href="?id=<?= $list_id ?>&type=title&sort=asc">Titel ↑</a> |
-        <a href="?id=<?= $list_id ?>&type=title&sort=desc">Titel ↓</a> |
-        <a href="?id=<?= $list_id ?>&type=priority&sort=asc">Prioriteit ↑</a> |
-        <a href="?id=<?= $list_id ?>&type=priority&sort=desc">Prioriteit ↓</a>
-    </p>
-    <button type="submit">Toevoegen</button>
-</form>
+    <a class="back-link" href="dashboard.php">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+      Alle lijsten
+    </a>
 
-<ul>
-<?php foreach ($tasks as $task): ?>
-    <li>
+    <div class="page-header">
+      <h1><?= htmlspecialchars($list['title']) ?></h1>
+      <p class="subtitle">Voeg taken toe, geef ze een prioriteit en vink af wat klaar is.</p>
+    </div>
+
+    <?php if (isset($_GET['success']) && $_GET['success'] === 'task'): ?>
+      <div class="alert alert-success">Taak toegevoegd!</div>
+    <?php endif; ?>
+
+    <form action="add_task.php" method="post" class="card task-form">
+      <input type="hidden" name="list_id" value="<?= (int)$list_id ?>">
+      <input type="text" name="title" placeholder="Nieuwe taak, bv. Hotel boeken" aria-label="Nieuwe taak" required>
+      <select name="priority" aria-label="Prioriteit">
+        <option value="low">Prioriteit: laag</option>
+        <option value="medium">Prioriteit: gemiddeld</option>
+        <option value="high">Prioriteit: hoog</option>
+      </select>
+      <button type="submit" class="btn btn-primary">Toevoegen</button>
+    </form>
+
+    <div class="toolbar">
+      <h2 class="section-title">Taken <span class="count"><?= count($tasks) ?></span></h2>
+      <nav class="sort" aria-label="Sorteren">
+        <span class="sort-label">Sorteren:</span>
+        <?php foreach ($sortOptions as [$type, $order, $label]): ?>
+          <a class="chip<?= ($sortType === $type && $sortOrder === $order) ? ' is-active' : '' ?>"
+             href="?id=<?= (int)$list_id ?>&amp;type=<?= $type ?>&amp;sort=<?= $order ?>"><?= $label ?></a>
+        <?php endforeach; ?>
+      </nav>
+    </div>
+
+    <?php if (!empty($tasks)): ?>
+    <ul class="task-list">
+    <?php foreach ($tasks as $task): ?>
+      <li class="task">
         <input type="checkbox" class="done-toggle"
-               data-id="<?= $task['id'] ?>"
+               id="task-<?= (int)$task['id'] ?>"
+               data-id="<?= (int)$task['id'] ?>"
                <?= $task['done'] ? 'checked' : '' ?>>
-        <?= htmlspecialchars($task['title']) ?> (<?= $task['priority'] ?>)
-        <a href="item.php?id=<?= $task['id'] ?>">Details</a>
-    </li>
-<?php endforeach; ?>
-</ul>
+        <label class="task-title" for="task-<?= (int)$task['id'] ?>"><?= htmlspecialchars($task['title']) ?></label>
+        <span class="badge badge-<?= htmlspecialchars($task['priority']) ?>"><?= $prioLabels[$task['priority']] ?? htmlspecialchars($task['priority']) ?></span>
+        <a class="task-link" href="item.php?id=<?= (int)$task['id'] ?>">Details →</a>
+      </li>
+    <?php endforeach; ?>
+    </ul>
+    <?php else: ?>
+      <div class="empty">
+        <strong>Nog geen taken</strong>
+        Voeg hierboven je eerste taak toe.
+      </div>
+    <?php endif; ?>
 
-<a href="dashboard.php">← Terug</a>
+  </div>
+</main>
+
+<?php require __DIR__ . '/includes/footer.php'; ?>
 
 <script>
 document.querySelectorAll('.done-toggle').forEach(box => {
