@@ -5,12 +5,23 @@ require_once __DIR__ . '/includes/db.php';
 
 if (isset($_POST['register'])) {
     try {
-        $username = htmlspecialchars($_POST['username']);
-        $email = htmlspecialchars($_POST['email']);
-        $password = $_POST['password'];
+        // Ruwe waarden opslaan; escapen gebeurt pas bij het tonen
+        $username = trim($_POST['username'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
 
-        if (empty($username) || empty($email) || empty($password)) {
+        if ($username === '' || $email === '' || $password === '') {
             throw new Exception("Vul alle velden in.");
+        }
+        $usernameLength = preg_match_all('/./us', $username);
+        if ($usernameLength < 3 || $usernameLength > 30) {
+            throw new Exception("Gebruikersnaam moet 3 tot 30 tekens lang zijn.");
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new Exception("Vul een geldig e-mailadres in.");
+        }
+        if (strlen($password) < 8) {
+            throw new Exception("Wachtwoord moet minstens 8 tekens lang zijn.");
         }
 
         // Check of email of username al bestaat
@@ -25,7 +36,8 @@ if (isset($_POST['register'])) {
         $stmt = $conn->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
         $stmt->execute([$username, $email, $hash]);
 
-        $_SESSION['user_id'] = $conn->lastInsertId();
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = (int) $conn->lastInsertId();
         $_SESSION['message'] = "Registratie gelukt!";
         header("Location: dashboard.php");
         exit;
@@ -98,7 +110,7 @@ if (isset($_POST['register'])) {
                 </div>
                 <div class="field">
                     <label for="password">Wachtwoord</label>
-                    <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="new-password" required>
+                    <input type="password" id="password" name="password" placeholder="Minstens 8 tekens" autocomplete="new-password" minlength="8" required>
                 </div>
                 <button type="submit" name="register" class="btn btn-primary btn-block">Registreer</button>
             </form>

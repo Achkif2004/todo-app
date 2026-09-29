@@ -1,23 +1,13 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-// (optioneel) output buffering als extra veiligheid
-// ob_start();
-
 session_start();
 require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/auth.php';
 
 // Blokkeer toegang als je niet ingelogd bent
-if (!isset($_SESSION['user_id'])) {
-    header('Location: index.php');
-    exit;
-}
+$user_id = require_login();
 
-$user_id = $_SESSION['user_id'];
-
-// Haal lijsten op (pas kolommen aan naar wat jij hebt)
-$stmt = $conn->prepare("SELECT id, title FROM lists WHERE user_id = ?");
+// Haal lijsten op
+$stmt = $conn->prepare("SELECT id, title FROM lists WHERE user_id = ? ORDER BY id");
 $stmt->execute([$user_id]);
 // Zorg dat we associatieve arrays krijgen
 $lists = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -67,9 +57,12 @@ unset($_SESSION['message'], $_SESSION['error']);
             <a class="list-card-link" href="list.php?id=<?= (int)$list['id'] ?>"><?= htmlspecialchars($list['title']) ?></a>
             <span class="list-card-meta">Bekijk taken →</span>
           </div>
-          <a class="icon-btn" href="delete_list.php?id=<?= (int)$list['id'] ?>" title="Lijst verwijderen" aria-label="Lijst verwijderen" onclick="return confirm('Weet je zeker dat je deze lijst wilt verwijderen?')">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-          </a>
+          <form action="delete_list.php" method="post" class="delete-form" onsubmit="return confirm('Weet je zeker dat je deze lijst wilt verwijderen?')">
+            <input type="hidden" name="id" value="<?= (int)$list['id'] ?>">
+            <button type="submit" class="icon-btn" title="Lijst verwijderen" aria-label="Lijst verwijderen">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            </button>
+          </form>
         </li>
       <?php endforeach; ?>
     </ul>

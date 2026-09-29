@@ -1,20 +1,20 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 session_start();
 require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/auth.php';
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
+$user_id = require_login();
+$list_id = (int) ($_GET['id'] ?? 0);
+
+// Eerst controleren of de lijst van deze gebruiker is, pas daarna taken ophalen
+$stmt = $conn->prepare("SELECT * FROM lists WHERE id = ? AND user_id = ?");
+$stmt->execute([$list_id, $user_id]);
+$list = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$list) {
+    $_SESSION['error'] = "Lijst niet gevonden.";
+    header("Location: dashboard.php");
     exit;
-}
-
-$list_id = $_GET['id'] ?? null;
-$user_id = $_SESSION['user_id'];
-
-if (!$list_id) {
-    die("Geen lijst opgegeven.");
 }
 
 $sortType = $_GET['type'] ?? 'priority';
@@ -30,17 +30,15 @@ $orderBy = $sortType === 'priority'
     ? "FIELD(priority, 'high', 'medium', 'low')" . ($sortOrder === 'desc' ? ' DESC' : '')
     : "$sortType " . strtoupper($sortOrder);
 
+// $orderBy komt enkel uit de whitelist hierboven, dus veilig in de query
 $stmt = $conn->prepare("SELECT * FROM tasks WHERE list_id = ? ORDER BY $orderBy");
 $stmt->execute([$list_id]);
 $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$stmt = $conn->prepare("SELECT * FROM lists WHERE id = ? AND user_id = ?");
-$stmt->execute([$list_id, $user_id]);
-$list = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$list) {
-    die("Lijst niet gevonden.");
-}
+// Flash messages ophalen (en meteen weghalen)
+$flash_ok = $_SESSION['message'] ?? null;
+$flash_err = $_SESSION['error'] ?? null;
+unset($_SESSION['message'], $_SESSION['error']);
 ?>
 <!DOCTYPE html>
 <html lang="nl">
@@ -74,8 +72,11 @@ $sortOptions = [
       <p class="subtitle">Voeg taken toe, geef ze een prioriteit en vink af wat klaar is.</p>
     </div>
 
-    <?php if (isset($_GET['success']) && $_GET['success'] === 'task'): ?>
-      <div class="alert alert-success">Taak toegevoegd!</div>
+    <?php if ($flash_ok): ?>
+      <div class="alert alert-success"><?= htmlspecialchars($flash_ok) ?></div>
+    <?php endif; ?>
+    <?php if ($flash_err): ?>
+      <div class="alert alert-error"><?= htmlspecialchars($flash_err) ?></div>
     <?php endif; ?>
 
     <form action="add_task.php" method="post" class="card task-form">
@@ -129,14 +130,21 @@ $sortOptions = [
 <script>
 document.querySelectorAll('.done-toggle').forEach(box => {
     box.addEventListener('change', () => {
+        box.disabled = true;
         fetch('toggle_done.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'task_id=' + box.dataset.id + '&done=' + (box.checked ? 1 : 0)
+            body: 'task_id=' + encodeURIComponent(box.dataset.id) + '&done=' + (box.checked ? 1 : 0)
         })
-        .then(res => res.text())
-        .then(data => console.log(data))
-        .catch(err => alert('Fout bij updaten taak'));
+        .then(res => {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+        })
+        .catch(err => {
+            // Opslaan mislukt: vinkje terugzetten zodat het scherm de database volgt
+            box.checked = !box.checked;
+            console.error('Fout bij updaten taak:', err);
+        })
+        .finally(() => { box.disabled = false; });
     });
 });
 
@@ -144,13 +152,6 @@ document.querySelectorAll('.done-toggle').forEach(box => {
 window.addEventListener("pageshow", function (event) {
     if (event.persisted) window.location.reload();
 });
-
-// Verberg ?success=task in URL
-if (window.location.search.includes('success=task')) {
-    const url = new URL(window.location);
-    url.searchParams.delete('success');
-    window.history.replaceState({}, document.title, url.pathname + url.search);
-}
 </script>
 
 </body>

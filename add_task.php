@@ -1,27 +1,30 @@
 <?php
 session_start();
 require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/auth.php';
 
+$user_id = require_login();
+$list_id = (int) ($_POST['list_id'] ?? 0);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        $list_id = $_POST['list_id'];
-        $title = htmlspecialchars($_POST['title']);
-        $priority = $_POST['priority'];
-        $user_id = $_SESSION['user_id'];
+        $title = trim($_POST['title'] ?? '');
+        $priority = $_POST['priority'] ?? '';
 
-        if (!in_array($priority, ['low', 'medium', 'high'])) {
+        if (!in_array($priority, ['low', 'medium', 'high'], true)) {
             throw new Exception("Ongeldige prioriteit.");
         }
 
-        if (empty($title)) {
+        if ($title === '') {
             throw new Exception("Titel mag niet leeg zijn.");
         }
 
-        $stmt = $conn->prepare("SELECT * FROM lists WHERE id = ? AND user_id = ?");
+        $stmt = $conn->prepare("SELECT id FROM lists WHERE id = ? AND user_id = ?");
         $stmt->execute([$list_id, $user_id]);
         if (!$stmt->fetch()) {
-            throw new Exception("Lijst niet gevonden.");
+            $_SESSION['error'] = "Lijst niet gevonden.";
+            header("Location: dashboard.php");
+            exit;
         }
 
         $stmt = $conn->prepare("SELECT COUNT(*) FROM tasks WHERE list_id = ? AND title = ?");
@@ -30,15 +33,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception("Deze taak bestaat al in deze lijst.");
         }
 
+        // Ruwe tekst opslaan; escapen gebeurt bij het tonen
         $stmt = $conn->prepare("INSERT INTO tasks (list_id, title, priority) VALUES (?, ?, ?)");
         $stmt->execute([$list_id, $title, $priority]);
 
         $_SESSION['message'] = "Taak toegevoegd!";
-        header("Location: list.php?id=" . $list_id . "&success=task");
-        exit;
     } catch (Exception $e) {
         $_SESSION['error'] = $e->getMessage();
-        header("Location: list.php?id=" . $list_id . "&success=task");
-        exit;
     }
 }
+
+header("Location: list.php?id=" . $list_id);
+exit;

@@ -1,30 +1,19 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 session_start();
 require_once __DIR__ . '/includes/db.php';
+require_once __DIR__ . '/includes/auth.php';
 
-// --- Veilig id + sessie check ---
-$task_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-$user_id = $_SESSION['user_id'] ?? null;
-
-if ($task_id <= 0 || !$user_id) {
-    die("Geen toegang");
-}
+// --- Sessie check + veilig id ---
+$user_id = require_login();
+$task_id = (int) ($_GET['id'] ?? 0);
 
 // --- Taak + eigendom controleren ---
-$stmt = $conn->prepare("
-    SELECT t.*, l.user_id 
-    FROM tasks t 
-    JOIN lists l ON t.list_id = l.id 
-    WHERE t.id = ? AND l.user_id = ?
-");
-$stmt->execute([$task_id, $user_id]);
-$task = $stmt->fetch(PDO::FETCH_ASSOC);
+$task = find_owned_task($conn, $task_id, $user_id);
 
 if (!$task) {
-    die("Taak niet gevonden of geen toegang");
+    $_SESSION['error'] = "Taak niet gevonden.";
+    header("Location: dashboard.php");
+    exit;
 }
 
 // --- Comments & files ophalen ---
@@ -110,7 +99,8 @@ unset($_SESSION['message'], $_SESSION['error']);
 
         <form action="upload_file.php" method="post" enctype="multipart/form-data" class="upload-form">
           <input type="hidden" name="task_id" value="<?= (int)$task_id ?>">
-          <input type="file" name="file" required aria-label="Bestand kiezen">
+          <input type="file" name="file" required aria-label="Bestand kiezen" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.txt">
+          <p class="hint">Afbeeldingen, pdf of txt · max. 5 MB</p>
           <button type="submit" class="btn btn-ghost btn-block">Upload bestand</button>
         </form>
 

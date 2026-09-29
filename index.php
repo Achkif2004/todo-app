@@ -1,17 +1,17 @@
 <?php
-
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-
 session_start();
 require_once(__DIR__ . '/includes/db.php');
 
+// Al ingelogd? Meteen door naar het dashboard.
+if (!empty($_SESSION['user_id']) && !isset($_POST['login'])) {
+    header("Location: dashboard.php");
+    exit;
+}
 
 if (isset($_POST['login'])) {
     try {
-        $email = $_POST['email'];
-        $password = $_POST['password'];
+        $email = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
 
         $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
         $stmt->execute([$email]);
@@ -21,7 +21,9 @@ if (isset($_POST['login'])) {
             throw new Exception("Login mislukt: foutieve gegevens.");
         }
 
-        $_SESSION['user_id'] = $user['id'];
+        // Nieuwe sessie-id na inloggen (tegen session fixation)
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = (int) $user['id'];
         $_SESSION['message'] = "Welkom terug!";
         header("Location: dashboard.php");
         exit;
