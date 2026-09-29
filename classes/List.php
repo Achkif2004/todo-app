@@ -10,15 +10,20 @@ class TodoList {
     }
 
     public function setTitle($title) {
-        if (empty($title)) {
+        $title = trim((string) $title);
+        if ($title === '') {
             throw new Exception("Titel mag niet leeg zijn.");
         }
-        $this->title = htmlspecialchars($title);
+        if (preg_match_all('/./us', $title) > 100) {
+            throw new Exception("Titel mag maximaal 100 tekens zijn.");
+        }
+        // Ruwe tekst bewaren; escapen gebeurt bij het tonen
+        $this->title = $title;
     }
 
     public function save($conn) {
         $stmt = $conn->prepare("INSERT INTO lists (title, user_id) VALUES (?, ?)");
         $stmt->execute([$this->title, $this->user_id]);
+        $this->id = (int) $conn->lastInsertId();
     }
 }
-?>
